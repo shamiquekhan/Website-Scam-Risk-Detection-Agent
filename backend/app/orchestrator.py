@@ -76,6 +76,7 @@ async def run_scan(url: str) -> ScanResult:
     summary_text = await summarize(scan_result)
     scan_result.summary = summary_text
 
-    await save_scan(scan_result)
+    if scan_result.score is not None:
+        await save_scan(scan_result)
 
     return scan_result

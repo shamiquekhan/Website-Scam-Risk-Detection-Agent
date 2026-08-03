@@ -6,8 +6,8 @@ import httpx
 from app.models import SignalResult
 from app.scoring.engine import _load_weights
 
-DNS_TIMEOUT = 5
-HTTP_TIMEOUT = 5
+DNS_TIMEOUT = 3
+HTTP_TIMEOUT = 4
 
 
 async def check(domain_or_url: str) -> SignalResult:
