@@ -1,0 +1,21 @@
+{
+  "domain_age_under_30": 25,
+  "domain_age_30_to_180": 12,
+  "privacy_protected_whois": 8,
+  "no_https": 20,
+  "expired_cert": 15,
+  "self_signed_cert": 20,
+  "cert_expires_soon": 5,
+  "safe_browsing_hit": 40,
+  "virustotal_3plus": 30,
+  "virustotal_1_2": 10,
+  "urlhaus_hit": 35,
+  "high_risk_asn": 10,
+  "dns_resolution_failure": 25,
+  "hosting_country_mismatch": 8,
+  "password_form_no_https": 20,
+  "urgency_language_with_form": 10,
+  "excessive_redirects": 12,
+  "typosquat": 30,
+  "positive_bonus_old_domain": 5
+}
