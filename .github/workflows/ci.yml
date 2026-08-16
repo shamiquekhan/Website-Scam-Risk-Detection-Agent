@@ -57,3 +57,26 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+  streamlit:
+    name: Streamlit app boots
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Import check
+        run: python -c "import streamlit_app"
+
+      - name: Boot check
+        run: |
+          streamlit run streamlit_app.py --server.port 8501 --server.headless true &
+          sleep 10
+          curl -sf http://127.0.0.1:8501/_stcore/health
+          kill %1 || true

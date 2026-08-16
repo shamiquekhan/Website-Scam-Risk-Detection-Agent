@@ -88,6 +88,9 @@ frontend/
 docs/  architecture.md, FREE_STACK.md, calibration-results.md
 .github/workflows/ci.yml   GitHub Actions (backend tests + frontend build)
 render.yaml               Free-tier Render blueprint (backend + Ollama)
+streamlit_app.py          Self-contained Streamlit app (Streamlit Cloud / HF Spaces)
+app.py                    Streamlit entry alias for Hugging Face Spaces
+requirements.txt          Root requirements incl. streamlit (for the Streamlit app)
 ```
 
 ---
@@ -141,6 +144,29 @@ npm run dev                        # http://127.0.0.1:3000
 cd backend
 docker compose up --build -d
 ```
+
+### Streamlit (single-service, zero-backend)
+
+A self-contained Streamlit app runs the whole scanner **in-process** — no separate
+FastAPI backend needed. It is deployable to Streamlit Community Cloud or Hugging
+Face Spaces for free.
+
+```bash
+pip install -r requirements.txt
+streamlit run streamlit_app.py
+```
+
+Deployment notes:
+
+- **Streamlit Community Cloud:** the repo root already has `streamlit_app.py` and
+  `requirements.txt`, so deploy with the default settings (entry point
+  `streamlit_app.py`).
+- **Hugging Face Spaces (Streamlit SDK):** `app.py` (a thin wrapper) and
+  `requirements.txt` are at the repo root, so no config is needed.
+- **Docker:** `docker build -f backend/Dockerfile.streamlit -t scamshield-streamlit .`
+  then run on port 8501.
+- The bundled ONNX model and the OpenPhish/URLhaus feed caches make the first
+  scans work without network seeding; feeds refresh automatically.
 
 ---
 
