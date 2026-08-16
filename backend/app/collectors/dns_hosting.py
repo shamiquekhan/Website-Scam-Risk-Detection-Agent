@@ -29,7 +29,7 @@ async def check(domain_or_url: str) -> SignalResult:
             category="hosting",
             passed=False,
             deduction=weights.get("dns_resolution_failure", 25),
-            detail="Domain name resolution timed out — the site could not be verified or reached.",
+            detail="Domain name resolution timed out - the site could not be verified or reached.",
             available=True,
             availability_reason="dns_failure",
         )
@@ -39,7 +39,7 @@ async def check(domain_or_url: str) -> SignalResult:
             category="hosting",
             passed=False,
             deduction=weights.get("dns_resolution_failure", 25),
-            detail="Domain did not resolve to an IP address — the site could not be verified or reached.",
+            detail="Domain did not resolve to an IP address - the site could not be verified or reached.",
             available=True,
             availability_reason="dns_failure",
         )
@@ -62,7 +62,7 @@ async def check(domain_or_url: str) -> SignalResult:
 
     if asn in high_risk_asns:
         deduction += weights.get("high_risk_asn", 10)
-        details.append(f"Hosted on ASN {asn} — associated with high-abuse hosting.")
+        details.append(f"Hosted on ASN {asn} - associated with high-abuse hosting.")
 
     country_by_tld = {
         "au": "AU", "br": "BR", "ca": "CA", "de": "DE", "fr": "FR",

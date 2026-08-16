@@ -77,7 +77,7 @@ def display_result(result: dict) -> None:
     with col_score:
         if score is None:
             st.markdown(
-                "<div style='font-size:3rem;font-weight:700;color:#94a3b8'>—</div>",
+                "<div style='font-size:3rem;font-weight:700;color:#94a3b8'>-</div>",
                 unsafe_allow_html=True,
             )
         else:
@@ -88,7 +88,7 @@ def display_result(result: dict) -> None:
     with col_meta:
         verdict_badge(verdict)
         st.caption(
-            f"{result['completed_signals']} of {result['total_signals']} checks completed · "
+            f"{result['completed_signals']} of {result['total_signals']} checks completed - "
             f"{result['confidence']}% confidence"
         )
         if result["cached"]:
@@ -105,18 +105,18 @@ def display_result(result: dict) -> None:
     for signal in result["signals"]:
         label = SIGNAL_LABELS.get(signal["signal_name"], signal["signal_name"])
         if not signal["available"]:
-            icon, tone = "…", "secondary"
+            icon, tone = "-", "secondary"
         elif signal["passed"]:
-            icon, tone = "✓", "success"
+            icon, tone = "OK", "success"
         else:
-            icon, tone = "✕", "error"
+            icon, tone = "FAIL", "error"
 
         if tone == "success":
-            st.success(f"{icon} **{label}** — {signal['detail']}")
+            st.success(f"{icon} **{label}** - {signal['detail']}")
         elif tone == "error":
-            st.error(f"{icon} **{label}** ( -{signal['deduction']} pts ) — {signal['detail']}")
+            st.error(f"{icon} **{label}** ( -{signal['deduction']} pts ) - {signal['detail']}")
         else:
-            st.caption(f"{icon} {label} — {signal['detail']}")
+            st.caption(f"{icon} {label} - {signal['detail']}")
 
 
 def single_scan_tab() -> None:
@@ -127,7 +127,7 @@ def single_scan_tab() -> None:
     )
     url = st.text_input("Enter a URL", placeholder="https://example.com")
     if st.button("Scan", type="primary", disabled=not url.strip()):
-        with st.spinner("Running 11 independent checks…"):
+        with st.spinner("Running 11 independent checks..."):
             try:
                 result = scan_cached(url.strip())
             except Exception as exc:  # noqa: BLE001
@@ -144,7 +144,7 @@ def parse_urls(text: str) -> list[str]:
 def batch_scan_tab() -> None:
     st.markdown("Paste up to 100 URLs (one per line or comma-separated).")
     text = st.text_area("URLs", placeholder="https://example.com\nhttps://secure-login-example.tk/login")
-    uploaded = st.file_uploader("…or upload a CSV (URLs in the first column)", type=["csv", "txt"])
+    uploaded = st.file_uploader("...or upload a CSV (URLs in the first column)", type=["csv", "txt"])
 
     urls = parse_urls(text)
     if uploaded is not None:
@@ -157,7 +157,7 @@ def batch_scan_tab() -> None:
 
     if st.button("Scan batch", type="primary", disabled=not urls):
         rows = []
-        progress = st.progress(0.0, text="Scanning…")
+        progress = st.progress(0.0, text="Scanning...")
         for i, url in enumerate(urls):
             try:
                 result = scan_cached(url)
@@ -179,7 +179,7 @@ def batch_scan_tab() -> None:
 def main() -> None:
     st.set_page_config(page_title="ScamShield AI", layout="centered")
     st.title("ScamShield AI")
-    st.caption("Website Scam Risk Detector Agent — free, open-source, no API keys.")
+    st.caption("Website Scam Risk Detector Agent - free, open-source, no API keys.")
     st.divider()
 
     tab_single, tab_batch = st.tabs(["Single scan", "Batch scan"])

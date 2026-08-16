@@ -4,7 +4,7 @@ import os
 import re
 from urllib.parse import urlparse
 
-import Levenshtein
+from app.utils import levenshtein_distance
 
 FEATURE_COUNT = 12
 
@@ -45,7 +45,7 @@ def _min_brand_distance(host: str) -> float:
         if host == b:
             best = 0.0
             break
-        distance = Levenshtein.distance(host, b) / max(len(host), len(b), 1)
+        distance = levenshtein_distance(host, b) / max(len(host), len(b), 1)
         best = min(best, distance)
     return best
 

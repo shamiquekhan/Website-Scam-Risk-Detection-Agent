@@ -30,7 +30,7 @@ async def check(domain_or_url: str) -> SignalResult:
             category="ssl",
             passed=False,
             deduction=20,
-            detail="Site does not support HTTPS or connection was refused — no encryption for any data you enter.",
+            detail="Site does not support HTTPS or connection was refused - no encryption for any data you enter.",
         )
 
 
@@ -92,7 +92,7 @@ def _score_from_expiry(not_after_str: str, cert_or_host) -> SignalResult:
             category="ssl",
             passed=False,
             deduction=5,
-            detail=f"SSL certificate expires in {days_left} days — renewal needed soon.",
+            detail=f"SSL certificate expires in {days_left} days - renewal needed soon.",
             raw_data={"expiry": not_after_str},
         )
 

@@ -41,7 +41,7 @@ export default function BatchPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Bulk Scan</h1>
         <Link href="/" className="text-sm text-cyan-400 hover:underline">
-          ← Single scan
+          Single scan
         </Link>
       </div>
 
@@ -64,7 +64,7 @@ export default function BatchPage() {
             disabled={loading || urls.length === 0}
             className="px-6 py-2.5 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Scanning…' : `Scan ${urls.length > 100 ? 100 : urls.length} URL${urls.length === 1 ? '' : 's'}`}
+            {loading ? 'Scanning...' : `Scan ${urls.length > 100 ? 100 : urls.length} URL${urls.length === 1 ? '' : 's'}`}
           </button>
         </div>
       </form>
@@ -72,7 +72,7 @@ export default function BatchPage() {
       {loading && (
         <div className="text-center py-8">
           <div className="animate-spin h-8 w-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-3" />
-          <p className="text-slate-400">Scanning URLs in batches…</p>
+          <p className="text-slate-400">Scanning URLs in batches...</p>
         </div>
       )}
 
@@ -98,7 +98,7 @@ export default function BatchPage() {
                 return (
                   <tr key={r.scan_id} className="hover:bg-slate-800/50">
                     <td className="px-4 py-3 text-slate-300 break-all max-w-xs truncate">{r.url}</td>
-                    <td className={`px-4 py-3 font-mono font-semibold ${style.text}`}>{r.score ?? '—'}</td>
+                    <td className={`px-4 py-3 font-mono font-semibold ${style.text}`}>{r.score ?? '-'}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-block px-2 py-0.5 rounded-full border text-xs ${style.chip}`}>
                         {r.verdict}
@@ -119,7 +119,7 @@ export default function BatchPage() {
         <div className="mt-4 space-y-2">
           {errors.map((e) => (
             <div key={e.url} className={`rounded-lg border px-3 py-2 text-xs ${signalTone(false, false)} text-slate-400`}>
-              {e.url} — {e.error}
+              {e.url} - {e.error}
             </div>
           ))}
         </div>

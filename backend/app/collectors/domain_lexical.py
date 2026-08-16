@@ -39,15 +39,15 @@ async def check(domain_or_url: str) -> SignalResult:
         entropy = _shannon_entropy(host)
         if entropy > HIGH_ENTROPY_THRESHOLD:
             deduction += weights.get("high_entropy_host", 5)
-            details.append("The domain looks randomly generated (high character entropy) — common for automated phishing.")
+            details.append("The domain looks randomly generated (high character entropy) - common for automated phishing.")
 
     if len(host) > 30 and host.count(".") >= 3:
         deduction += weights.get("long_subdomain_chain", 5)
-        details.append("Unusually long, multi-part domain name — often used to hide the real site name.")
+        details.append("Unusually long, multi-part domain name - often used to hide the real site name.")
 
     if "@" in (parsed.netloc or ""):
         deduction += weights.get("at_sign_in_url", 15)
-        details.append("URL contains an '@' in the host portion — a classic phishing trick to disguise the real destination.")
+        details.append("URL contains an '@' in the host portion - a classic phishing trick to disguise the real destination.")
 
     if not details:
         details.append("No suspicious URL structure detected.")

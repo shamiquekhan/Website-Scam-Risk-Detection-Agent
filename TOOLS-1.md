@@ -10,7 +10,7 @@ Reference for every external tool/API and key internal library this system depen
 - **Used in:** `collectors/safe_browsing.py`
 - **Purpose:** Checks URL against Google's malware/phishing/unwanted-software blacklists.
 - **Auth:** API key (Google Cloud Console, free to enable).
-- **Rate limit:** Generous free quota (thousands/day) — not a practical bottleneck for MVP traffic.
+- **Rate limit:** Generous free quota (thousands/day) - not a practical bottleneck for MVP traffic.
 - **Fallback if unavailable:** Mark signal `available=False`, exclude from scoring, note in response that this check couldn't be completed.
 - **Docs:** `developers.google.com/safe-browsing`
 
@@ -18,7 +18,7 @@ Reference for every external tool/API and key internal library this system depen
 - **Used in:** `collectors/virustotal.py`
 - **Purpose:** Aggregates verdicts from 60+ antivirus/security engines for a given URL.
 - **Auth:** API key (free account).
-- **Rate limit:** **4 requests/minute, 500/day on free tier** — the tightest constraint in the system. Cache aggressively; consider a small internal queue/delay if running the calibration suite (40 URLs) in one pass.
+- **Rate limit:** **4 requests/minute, 500/day on free tier** - the tightest constraint in the system. Cache aggressively; consider a small internal queue/delay if running the calibration suite (40 URLs) in one pass.
 - **Fallback if unavailable:** Mark `available=False`, exclude from scoring.
 - **Docs:** `developers.virustotal.com`
 
@@ -41,7 +41,7 @@ Reference for every external tool/API and key internal library this system depen
 - **Used in:** `collectors/dns_hosting.py`
 - **Purpose:** IP → ASN, hosting organization, country lookup.
 - **Auth:** Free API token.
-- **Rate limit:** 50,000 requests/month free tier — comfortable for MVP scale with caching.
+- **Rate limit:** 50,000 requests/month free tier - comfortable for MVP scale with caching.
 - **Fallback if unavailable:** Falls back to ip-api.com (keyless, ~45 req/min); if both fail, mark `available=False`.
 
 ### ip-api.com
@@ -55,7 +55,7 @@ Reference for every external tool/API and key internal library this system depen
 - **Used in:** `llm/summarizer.py`
 - **Purpose:** Generates the plain-English summary paragraph only. **Never used for scoring.**
 - **Auth:** API key.
-- **Rate limit:** Check current free-tier limits at time of build (changes periodically) — cache the summary alongside the rest of the scan result so repeat lookups don't re-call it.
+- **Rate limit:** Check current free-tier limits at time of build (changes periodically) - cache the summary alongside the rest of the scan result so repeat lookups don't re-call it.
 - **Fallback if unavailable:** Fall back to a templated string summary built from the structured signal list (e.g., "This site received a score of X due to: [list of failed signal details]").
 
 ---
@@ -70,7 +70,7 @@ Reference for every external tool/API and key internal library this system depen
 | `python-whois` | WHOIS fallback | Only invoked when RDAP has no data |
 | `tldextract` | Domain parsing | Correctly splits subdomain/registrable domain/TLD, including multi-part TLDs like `.co.uk` |
 | `beautifulsoup4` | HTML parsing | Content heuristics collector |
-| `python-Levenshtein` | Edit-distance calc | Typosquat detection |
+| `rapidfuzz` | Edit-distance calc | Typosquat detection |
 | `groq` | Groq SDK | Summarizer only |
 | `aiosqlite` | Async SQLite | Cache layer |
 | `slowapi` | Rate limiting | Per-IP limit on `/scan` |
@@ -83,7 +83,7 @@ Reference for every external tool/API and key internal library this system depen
 
 | File | Purpose | Maintenance |
 |---|---|---|
-| `backend/data/top_brands.json` | Reference list for typosquat detection | Start at ~40–50 major brands, expand over time; adding a brand is a config change, not a code change |
+| `backend/data/top_brands.json` | Reference list for typosquat detection | Start at ~40-50 major brands, expand over time; adding a brand is a config change, not a code change |
 | `backend/data/high_risk_asn.json` | Known high-abuse hosting ASNs | Seed manually from public writeups; expect to revisit periodically, this list goes stale |
 | `backend/app/scoring/weights.json` | All scoring deduction values | The single place to tune scoring behavior; changes require re-running the calibration suite |
 
@@ -94,4 +94,4 @@ Reference for every external tool/API and key internal library this system depen
 The system is designed so that **no single external tool being down takes the whole scan down**. If a collector's `available=False`:
 - It's excluded from both the score sum and the hard-cap check.
 - The frontend shows it as "Check unavailable" rather than a pass or fail.
-- If *most* signals are unavailable (e.g., 5+ of 8), the API should still return a result but the frontend should visibly flag "Limited data — verdict confidence reduced" rather than presenting a full-confidence badge on a mostly-empty signal set. (Implement this threshold check in `orchestrator.py` when building section 6 of `docs/implementation-plan.md`.)
+- If *most* signals are unavailable (e.g., 5+ of 8), the API should still return a result but the frontend should visibly flag "Limited data - verdict confidence reduced" rather than presenting a full-confidence badge on a mostly-empty signal set. (Implement this threshold check in `orchestrator.py` when building section 6 of `docs/implementation-plan.md`.)

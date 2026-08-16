@@ -81,15 +81,15 @@ does **not** taint the bare `github.com` domain, while a domain-root report (e.g
   score at 29 (High Risk) regardless of other signals.
 - **Completeness factor**: final score is scaled by `completed / total`; fewer than
   6 of 11 completed checks yields **Insufficient Data** (fail-closed).
-- Verdict bands: **90–100 Safe**, **70–89 Likely Safe**, **50–69 Caution**,
-  **30–49 Suspicious**, **0–29 High Risk**.
+- Verdict bands: **90-100 Safe**, **70-89 Likely Safe**, **50-69 Caution**,
+  **30-49 Suspicious**, **0-29 High Risk**.
 
 ## ML model
 
 - Trained with `ml_training/` on OpenPhish positives + synthetic phishing variants
   and Majestic Million negatives.
 - Random Forest exported to ONNX (`models/phishing_classifier.onnx`), run with
-  ONNX Runtime — no API call, no rate limit.
+  ONNX Runtime - no API call, no rate limit.
 - 12 lexical features (length, dots, subdomain depth, digit/special ratios,
   entropy, `@`-sign, IP literal, HTTPS, hyphens, risky TLD, brand distance).
 - Degrades to `available: false` if the model file is missing.

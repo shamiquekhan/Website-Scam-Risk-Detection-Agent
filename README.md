@@ -1,9 +1,9 @@
-# ScamShield AI — Website Scam Risk Detector Agent
+# ScamShield AI - Website Scam Risk Detector Agent
 
 > **Zero-cost, zero-API-key, multi-signal website safety scanner.** 11 independent
-> checks — SSL, domain age, DNS/hosting, OpenPhish, URLhaus, a **local on-device ML
+> checks - SSL, domain age, DNS/hosting, OpenPhish, URLhaus, a **local on-device ML
 > phishing classifier**, URL-structure heuristics, content heuristics, and
-> typosquatting — combined by a deterministic weighted engine into a **0–100 risk
+> typosquatting - combined by a deterministic weighted engine into a **0-100 risk
 > score** + verdict in under ~10 seconds.
 
 Built as a marketplace showcase: **$0 to build, $0 to run**, fully auditable, and
@@ -17,20 +17,20 @@ dependency is free.
 
   | Signal | Source | Key? |
   |--------|--------|------|
-  | SSL/TLS validity & expiry | Direct TLS handshake | — |
-  | Domain age | Keyless IANA RDAP bootstrap + `rdap.org` + `python-whois` | — |
-  | DNS + hosting ASN/geo | `dns.resolver` + `ip-api.com` + `ipwho.is` | — |
-  | **OpenPhish feed** | Public feed, refreshed every 6h | — |
-  | **URLhaus blocklist** | Keyless public download, refreshed daily | — |
-  | **Local ML classifier** | ONNX model (on-device) | — |
-  | URL-structure heuristics | Deterministic rules | — |
-  | Content heuristics | Page fetch + `BeautifulSoup` | — |
-  | Typosquat / brand impersonation | Local `top_brands.json` + Levenshtein | — |
+  | SSL/TLS validity & expiry | Direct TLS handshake | - |
+  | Domain age | Keyless IANA RDAP bootstrap + `rdap.org` + `python-whois` | - |
+  | DNS + hosting ASN/geo | `dns.resolver` + `ip-api.com` + `ipwho.is` | - |
+  | **OpenPhish feed** | Public feed, refreshed every 6h | - |
+  | **URLhaus blocklist** | Keyless public download, refreshed daily | - |
+  | **Local ML classifier** | ONNX model (on-device) | - |
+  | URL-structure heuristics | Deterministic rules | - |
+  | Content heuristics | Page fetch + `BeautifulSoup` | - |
+  | Typosquat / brand impersonation | Local `top_brands.json` + Levenshtein | - |
   | Google Safe Browsing | Optional key | optional |
   | VirusTotal | Optional key | optional |
 
-- A **deterministic weighted scoring engine** combines them into a 0–100 score + verdict.
-- An LLM writes a plain-English summary — **Ollama locally** by default, Groq or a
+- A **deterministic weighted scoring engine** combines them into a 0-100 score + verdict.
+- An LLM writes a plain-English summary - **Ollama locally** by default, Groq or a
   templated summary as fallback. **The LLM never sets or changes the score.**
 
 Key safety property: the score is **fail-closed**. If fewer than 6 of 11 checks
@@ -112,7 +112,7 @@ Run the tests:
 pytest tests/ -v
 ```
 
-Optional — local LLM summarizer with Ollama:
+Optional - local LLM summarizer with Ollama:
 
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
@@ -120,7 +120,7 @@ ollama pull phi3:mini          # or llama3.2:3b
 # OLLAMA_MODEL=phi3:mini uvicorn app.main:app
 ```
 
-Optional — retrain the ML classifier (model is bundled, so usually unnecessary):
+Optional - retrain the ML classifier (model is bundled, so usually unnecessary):
 
 ```bash
 pip install -r requirements-train.txt
@@ -147,7 +147,7 @@ docker compose up --build -d
 
 ### Streamlit (single-service, zero-backend)
 
-A self-contained Streamlit app runs the whole scanner **in-process** — no separate
+A self-contained Streamlit app runs the whole scanner **in-process** - no separate
 FastAPI backend needed. It is deployable to Streamlit Community Cloud or Hugging
 Face Spaces for free.
 
@@ -180,7 +180,7 @@ Returns a `ScanResult`:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `score` | `int | null` | 0–100, `null` when evidence is insufficient |
+| `score` | `int | null` | 0-100, `null` when evidence is insufficient |
 | `verdict` | `str` | `Safe` / `Likely Safe` / `Caution` / `Suspicious` / `High Risk` / `Insufficient Data` |
 | `signals` | `array` | Each: `{signal_name, category, passed, deduction, detail, available, availability_reason}` |
 | `completed_signals` | `int` | Checks that returned real data |
@@ -203,11 +203,11 @@ Shareable report retrieval · liveness probe.
 
 | Score | Verdict |
 |-------|---------|
-| 90–100 | Safe (green) |
-| 70–89 | Likely Safe (light green) |
-| 50–69 | Caution (yellow) |
-| 30–49 | Suspicious (orange) |
-| 0–29 | High Risk (red) |
+| 90-100 | Safe (green) |
+| 70-89 | Likely Safe (light green) |
+| 50-69 | Caution (yellow) |
+| 30-49 | Suspicious (orange) |
+| 0-29 | High Risk (red) |
 | < 6 of 11 checks | Insufficient Data |
 
 Hard-cap: any OpenPhish / URLhaus / Safe Browsing hit caps the outcome at
@@ -256,6 +256,6 @@ and the latest results, including the local ML model's holdout precision/recall.
 
 ## License
 
-MIT — free for commercial and personal use. Attribution appreciated.
+MIT - free for commercial and personal use. Attribution appreciated.
 
 *100% free. 100% open-source. 100% auditable. No API keys required.*

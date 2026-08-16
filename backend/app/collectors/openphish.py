@@ -97,7 +97,7 @@ async def check(domain_or_url: str) -> SignalResult:
             category="reputation",
             passed=True,
             deduction=0,
-            detail="OpenPhish feed is empty — phishing feed check not usable.",
+            detail="OpenPhish feed is empty - phishing feed check not usable.",
             available=False,
             availability_reason="feed_empty",
         )

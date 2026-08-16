@@ -65,13 +65,13 @@ async def check(domain_or_url: str) -> SignalResult:
 
     if has_password_form and not final_url.startswith("https://"):
         deduction += weights.get("password_form_no_https", 20)
-        details.append("Password form detected on a non-HTTPS page — credentials would be sent unencrypted.")
+        details.append("Password form detected on a non-HTTPS page - credentials would be sent unencrypted.")
 
     page_text = soup.get_text(separator=" ", strip=True).lower()
     has_urgency = any(kw in page_text for kw in URGENCY_KEYWORDS)
     if has_urgency and has_password_form:
         deduction += weights.get("urgency_language_with_form", 10)
-        details.append("Urgency/pressure language detected alongside a form — common in phishing pages.")
+        details.append("Urgency/pressure language detected alongside a form - common in phishing pages.")
 
     if not details:
         details.append("No suspicious content patterns detected.")

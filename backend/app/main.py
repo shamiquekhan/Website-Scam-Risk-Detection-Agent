@@ -10,7 +10,7 @@ from app.models import ScanRequest, ScanResult, BatchScanRequest, BatchScanResul
 from app.orchestrator import run_scan, run_scan_limited
 from app.utils import normalize_url
 
-app = FastAPI(title="ScamShield AI — Website Scam Risk Detector", version="2.0.0")
+app = FastAPI(title="ScamShield AI - Website Scam Risk Detector", version="2.0.0")
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter

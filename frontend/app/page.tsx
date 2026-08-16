@@ -58,7 +58,7 @@ export default function Home() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">ScamShield AI</h1>
         <p className="text-slate-400">
-          Zero-cost website scam & phishing risk detector — 11 independent checks, local ML,
+          Zero-cost website scam & phishing risk detector - 11 independent checks, local ML,
           no API keys required.
         </p>
       </div>
@@ -78,13 +78,13 @@ export default function Home() {
             disabled={loading || !url.trim()}
             className="px-6 py-3 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Scanning…' : 'Scan'}
+            {loading ? 'Scanning...' : 'Scan'}
           </button>
         </div>
         <p className="text-xs text-slate-500 mt-2 text-center sm:text-left">
           {result?.cached ? 'Cached result (scanned within the last 24h). ' : ''}
           <Link href="/batch" className="text-cyan-400 hover:underline">
-            Bulk-scan many URLs →
+            Bulk-scan many URLs
           </Link>
         </p>
       </form>
@@ -118,7 +118,7 @@ export default function Home() {
               onClick={copyReportLink}
               className="px-4 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors"
             >
-              {copied ? 'Copied ✓' : 'Copy shareable report link'}
+              {copied ? 'Copied' : 'Copy shareable report link'}
             </button>
           </div>
         </div>

@@ -157,16 +157,16 @@ def _has_redacted_entity(data: dict) -> bool:
 def _score(domain: str, days_old: int, registrar: str, privacy_protected: bool, weights: dict) -> SignalResult:
     if days_old < 30:
         deduction = weights.get("domain_age_under_30", 25)
-        detail = f"Domain registered {days_old} days ago — very new domains are frequently used for short-lived scam campaigns."
+        detail = f"Domain registered {days_old} days ago - very new domains are frequently used for short-lived scam campaigns."
     elif days_old < 90:
         deduction = weights.get("domain_age_30_to_90", 15)
-        detail = f"Domain registered {days_old} days ago — recent registrations are more often tied to short-lived scam campaigns."
+        detail = f"Domain registered {days_old} days ago - recent registrations are more often tied to short-lived scam campaigns."
     elif days_old < 180:
         deduction = weights.get("domain_age_90_to_180", 12)
-        detail = f"Domain registered {days_old} days ago — moderately new."
+        detail = f"Domain registered {days_old} days ago - moderately new."
     else:
         deduction = 0
-        detail = f"Domain is {days_old} days old — established domain."
+        detail = f"Domain is {days_old} days old - established domain."
 
     passed = deduction == 0
 

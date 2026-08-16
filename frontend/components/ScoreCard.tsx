@@ -60,7 +60,7 @@ export default function ScoreCard({ score, verdict, summary, completedSignals, t
           </span>
           <div className="text-sm text-slate-400 mt-4">
             <span className="text-slate-200 font-medium">{completedSignals}</span> of{' '}
-            <span className="text-slate-200 font-medium">{totalSignals}</span> checks completed ·{' '}
+            <span className="text-slate-200 font-medium">{totalSignals}</span> checks completed -{' '}
             <span className="text-slate-200 font-medium">{confidence}%</span> confidence
           </div>
           {summary && (

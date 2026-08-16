@@ -1,15 +1,15 @@
 # PROMPTS.md
 
-All LLM prompts used in the system, versioned. The summarizer is the only place an LLM is called — keep it that way (see `AGENTS.md` invariant #1). If you add a second LLM call anywhere, document it here too.
+All LLM prompts used in the system, versioned. The summarizer is the only place an LLM is called - keep it that way (see `AGENTS.md` invariant #1). If you add a second LLM call anywhere, document it here too.
 
 ---
 
 ## Summarizer prompt (v1)
 
 **Used in:** `backend/app/llm/summarizer.py`
-**Model:** Groq — small/fast model (e.g. Llama 3.1 8B) for low latency
-**Input:** structured signal list + final score + final verdict (all already computed — the LLM receives facts, not raw data to interpret)
-**Output:** 2–4 plain-English sentences
+**Model:** Groq - small/fast model (e.g. Llama 3.1 8B) for low latency
+**Input:** structured signal list + final score + final verdict (all already computed - the LLM receives facts, not raw data to interpret)
+**Output:** 2-4 plain-English sentences
 
 ### System prompt
 ```
@@ -62,7 +62,7 @@ def fallback_summary(score: int, verdict: str, failed_signals: list[SignalResult
 ```
 
 ### Testing this prompt
-Manually run against three fixture sets (all-clear / mixed / high-risk — see `docs/implementation-plan.md` §5) and read the output for:
+Manually run against three fixture sets (all-clear / mixed / high-risk - see `docs/implementation-plan.md` §5) and read the output for:
 1. Does it stay faithful to only the given findings? (no invented risks)
 2. Does the tone match the verdict? (Caution shouldn't sound as alarming as High Risk, or as reassuring as Safe)
 3. Is it actually readable by someone non-technical? (read it out loud test)
@@ -73,4 +73,4 @@ Log any drift as a prompt revision (bump to v2 with a changelog note below), not
 
 ## Changelog
 
-- **v1** — initial version, strict summary-only constraint, fallback template added after initial design (never shipped without a fallback path).
+- **v1** - initial version, strict summary-only constraint, fallback template added after initial design (never shipped without a fallback path).

@@ -35,7 +35,7 @@ export default function SignalList({ signals }: SignalListProps) {
               className="w-full flex items-start gap-3 text-left"
             >
               <span className="text-lg mt-0.5">
-                {!s.available ? '…' : s.passed ? '✓' : '✕'}
+                {!s.available ? '-' : s.passed ? 'OK' : 'FAIL'}
               </span>
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-2">
@@ -61,7 +61,7 @@ export default function SignalList({ signals }: SignalListProps) {
                   </p>
                 )}
                 <span className="text-xs text-slate-500 mt-1 inline-block">
-                    {isOpen ? 'Hide details ▲' : 'Details ▼'}
+                    {isOpen ? 'Hide details' : 'Show details'}
                   </span>
               </div>
             </button>

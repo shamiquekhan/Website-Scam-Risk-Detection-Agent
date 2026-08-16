@@ -1,6 +1,33 @@
 from urllib.parse import urlparse, urlunparse
 import tldextract
 
+try:
+    from rapidfuzz.distance import Levenshtein as _Levenshtein
+except Exception:  # pragma: no cover - fallback when C extension is unavailable
+    _Levenshtein = None
+
+
+def levenshtein_distance(a: str, b: str) -> int:
+    """Edit distance via RapidFuzz, falling back to a pure-Python DP when the
+    C extension cannot be installed (e.g. build failures on new Python versions)."""
+    if _Levenshtein is not None:
+        return _Levenshtein.distance(a, b)
+    if a == b:
+        return 0
+    la, lb = len(a), len(b)
+    if la == 0:
+        return lb
+    if lb == 0:
+        return la
+    prev = list(range(lb + 1))
+    for i, ca in enumerate(a, 1):
+        curr = [i] + [0] * lb
+        for j, cb in enumerate(b, 1):
+            cost = 0 if ca == cb else 1
+            curr[j] = min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost)
+        prev = curr
+    return prev[lb]
+
 
 def normalize_url(raw: str) -> str:
     raw = raw.strip()

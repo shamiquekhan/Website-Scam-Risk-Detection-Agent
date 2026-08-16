@@ -1,8 +1,8 @@
 import json
 import os
-import Levenshtein
 from app.models import SignalResult
 from app.scoring.engine import _load_weights
+from app.utils import levenshtein_distance
 
 HOMOGLYPHS = {
     "0": "o", "1": "l", "3": "e", "4": "a", "5": "s",
@@ -39,14 +39,14 @@ async def check(domain_or_url: str) -> SignalResult:
         if domain == brand_clean:
             continue
 
-        distance = Levenshtein.distance(normalized_domain, brand_clean)
+        distance = levenshtein_distance(normalized_domain, brand_clean)
         if distance <= 2:
             return SignalResult(
                 signal_name="typosquat",
                 category="brand",
                 passed=False,
                 deduction=weights.get("typosquat", 30),
-                detail=f"Domain closely resembles '{brand}' (typosquat distance: {distance}) — possible impersonation.",
+                detail=f"Domain closely resembles '{brand}' (typosquat distance: {distance}) - possible impersonation.",
                 raw_data={"resembles": brand, "distance": distance},
             )
 

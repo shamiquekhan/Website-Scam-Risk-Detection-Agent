@@ -1,13 +1,13 @@
 # Calibration Results
 
-Status: **PENDING — live calibration not yet run.**
+Status: **PENDING - live calibration not yet run.**
 
 ## Methodology
 
 The scoring engine is calibrated against two labeled sets before the tool can claim reliable verdicts:
 
-- **Known-good set** (15–20 URLs): major banks, e-commerce, government, established SaaS.
-- **Known-bad set** (15–20 URLs): currently-live phishing URLs pulled from URLhaus / OpenPhish public feeds **at test-run time** (phishing URLs get taken down fast, so fixtures must be fetched dynamically, never hardcoded).
+- **Known-good set** (15-20 URLs): major banks, e-commerce, government, established SaaS.
+- **Known-bad set** (15-20 URLs): currently-live phishing URLs pulled from URLhaus / OpenPhish public feeds **at test-run time** (phishing URLs get taken down fast, so fixtures must be fetched dynamically, never hardcoded).
 
 For each set we run the full pipeline and assert:
 
@@ -19,13 +19,13 @@ Failures are investigated, weights in `backend/app/scoring/weights.json` are tun
 
 ## Rules observed during calibration
 
-- Never actively interact with live phishing sites (no form submissions, no credentials, no following payment flows) — passive fetching only.
+- Never actively interact with live phishing sites (no form submissions, no credentials, no following payment flows) - passive fetching only.
 - Respect API terms of service and free-tier rate limits for Safe Browsing, VirusTotal, and URLhaus.
 - Any change to `scoring/engine.py` or `weights.json` requires re-running calibration and updating this file before the change is considered done.
 
 ## Results table
 
-Status: **PARTIAL — deterministic + local-ML signals calibrated; live-reputation
+Status: **PARTIAL - deterministic + local-ML signals calibrated; live-reputation
 signals still require optional API keys.**
 
 The checks below ran with only the free/keyless signal stack (OpenPhish, URLhaus
@@ -35,7 +35,7 @@ signals varied run-to-run).
 
 | URL | Score | Verdict | Notes |
 |---|---|---|---|
-| https://example.com/ | 73–82 | Likely Safe | Established domain, valid SSL, all reputation feeds clean |
+| https://example.com/ | 73-82 | Likely Safe | Established domain, valid SSL, all reputation feeds clean |
 | https://github.com/ | 80+ | Likely Safe | Not tainted by URLhaus `github.com/user/...` malware reports (path-aware matching) |
 | https://fidelity-investment.vercel.app/ | 18 | High Risk | OpenPhish feed hit (−40) + local ML 98% (−30) |
 | https://secure-login-paypal-account.tk/login | 6 | High Risk | Local ML 99%, suspicious TLD, no HTTPS |
@@ -59,5 +59,5 @@ Sample inferences on the bundled ONNX model: `github.com` → 0.02, `google.com`
 
 ```bash
 cd backend && source venv/bin/activate
-pytest tests/test_labeled_set.py -v   # slow — hits live APIs
+pytest tests/test_labeled_set.py -v   # slow - hits live APIs
 ```

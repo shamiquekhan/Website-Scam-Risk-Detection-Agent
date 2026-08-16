@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'ScamShield AI — Website Scam Risk Detector',
+  title: 'ScamShield AI - Website Scam Risk Detector',
   description:
-    'Zero-cost, multi-signal website safety scanner. SSL, domain age, DNS, content heuristics, typosquatting, OpenPhish, URLhaus and a local ML classifier — 0–100 risk score in seconds, no API keys required.',
+    'Zero-cost, multi-signal website safety scanner. SSL, domain age, DNS, content heuristics, typosquatting, OpenPhish, URLhaus and a local ML classifier - 0-100 risk score in seconds, no API keys required.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
