@@ -1,5 +1,6 @@
 import asyncio
 import socket
+import time
 import httpx
 import tldextract
 from datetime import datetime, timezone
@@ -8,6 +9,36 @@ from app.scoring.engine import _load_weights
 
 RDAP_TIMEOUT = 4
 WHOIS_FALLBACK_TIMEOUT = 3
+BOOTSTRAP_URL = "https://data.iana.org/rdap/dns.json"
+BOOTSTRAP_TTL = 24 * 3600
+
+_bootstrap: dict | None = None
+_bootstrap_fetched_at: float = 0.0
+
+
+async def _get_bootstrap() -> dict | None:
+    global _bootstrap, _bootstrap_fetched_at
+    if _bootstrap is not None and (time.time() - _bootstrap_fetched_at) < BOOTSTRAP_TTL:
+        return _bootstrap
+    try:
+        async with httpx.AsyncClient(timeout=RDAP_TIMEOUT) as client:
+            resp = await client.get(BOOTSTRAP_URL)
+        if resp.status_code == 200:
+            _bootstrap = resp.json()
+            _bootstrap_fetched_at = time.time()
+    except Exception:
+        pass
+    return _bootstrap
+
+
+def _authoritative_rdap_urls(bootstrap: dict | None, suffix: str) -> list[str]:
+    if not bootstrap:
+        return []
+    label = f".{suffix.lower()}"
+    for entry in bootstrap.get("services", []):
+        if len(entry) >= 2 and entry[0] and label in entry[0]:
+            return entry[1]
+    return []
 
 
 def _parse_rdap_date(date_str: str) -> datetime:
@@ -20,13 +51,24 @@ async def check(domain_or_url: str) -> SignalResult:
     extracted = tldextract.extract(domain_or_url)
     domain = f"{extracted.domain}.{extracted.suffix}" if extracted.domain and extracted.suffix else domain_or_url.replace("https://", "").replace("http://", "").split("/")[0].split(":")[0]
     weights = _load_weights()
-    try:
-        async with httpx.AsyncClient(timeout=RDAP_TIMEOUT, follow_redirects=True) as client:
-            resp = await client.get(f"https://rdap.org/domain/{domain}")
-            if resp.status_code != 200:
-                raise ValueError(f"RDAP returned {resp.status_code}")
-            data = resp.json()
-    except Exception:
+
+    candidates = list(_authoritative_rdap_urls(await _get_bootstrap(), extracted.suffix))
+    if not candidates:
+        candidates = [f"https://rdap.org/domain/{domain}"]
+    candidates = [base.rstrip("/") + "/domain/" + domain for base in candidates]
+
+    data = None
+    for url in candidates:
+        try:
+            async with httpx.AsyncClient(timeout=RDAP_TIMEOUT, follow_redirects=True) as client:
+                resp = await client.get(url)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    break
+        except Exception:
+            continue
+
+    if data is None:
         try:
             whois_data = await asyncio.wait_for(
                 asyncio.to_thread(_whois_fallback, domain),
@@ -116,8 +158,11 @@ def _score(domain: str, days_old: int, registrar: str, privacy_protected: bool, 
     if days_old < 30:
         deduction = weights.get("domain_age_under_30", 25)
         detail = f"Domain registered {days_old} days ago — very new domains are frequently used for short-lived scam campaigns."
+    elif days_old < 90:
+        deduction = weights.get("domain_age_30_to_90", 15)
+        detail = f"Domain registered {days_old} days ago — recent registrations are more often tied to short-lived scam campaigns."
     elif days_old < 180:
-        deduction = weights.get("domain_age_30_to_180", 12)
+        deduction = weights.get("domain_age_90_to_180", 12)
         detail = f"Domain registered {days_old} days ago — moderately new."
     else:
         deduction = 0

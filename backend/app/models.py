@@ -18,6 +18,11 @@ class ScanRequest(BaseModel):
     url: str
 
 
+class BatchScanRequest(BaseModel):
+    urls: list[str]
+    max_concurrency: Optional[int] = 4
+
+
 class ScanResult(BaseModel):
     scan_id: str
     url: str
@@ -31,3 +36,10 @@ class ScanResult(BaseModel):
     total_signals: int = 0
     confidence: int = 0
     cached: bool = False
+
+
+class BatchScanResult(BaseModel):
+    results: list[ScanResult]
+    scanned: int
+    failed: int
+    errors: list[dict[str, str]]

@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: scamshield-ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+    command: serve
+
+  backend:
+    build: .
+    container_name: scamshield-backend
+    ports:
+      - "8000:8000"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: phi3:mini
+      SCAN_DB_PATH: /app/cache/cache.db
+      # All optional; remove the ones you don't have keys for.
+      VIRUSTOTAL_API_KEY: ${VIRUSTOTAL_API_KEY:-}
+      GOOGLE_SAFE_BROWSING_API_KEY: ${GOOGLE_SAFE_BROWSING_API_KEY:-}
+      URLHAUS_AUTH_KEY: ${URLHAUS_AUTH_KEY:-}
+      IPINFO_TOKEN: ${IPINFO_TOKEN:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    volumes:
+      - backend_cache:/app/cache
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  backend_cache:

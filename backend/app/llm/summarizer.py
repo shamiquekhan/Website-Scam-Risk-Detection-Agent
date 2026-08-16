@@ -1,6 +1,28 @@
 import os
-from groq import Groq
-from app.models import SignalResult, ScanResult
+
+import httpx
+
+from app.models import ScanResult
+
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "phi3:mini")
+OLLAMA_TIMEOUT = 20
+
+SYSTEM_PROMPT = (
+    "You are summarizing a website risk scan for a non-technical reader.\n\n"
+    "You will be given:\n"
+    "- A final risk score (0-100, or 'insufficient data') and verdict that have ALREADY been calculated by a rule-based system.\n"
+    "- A list of specific findings, marking each check as passed, red flag, or unavailable.\n\n"
+    "Your job is ONLY to summarize the given findings in plain English, in 2-4 sentences.\n\n"
+    "Strict rules:\n"
+    "- Do NOT invent, assume, or add any risk or safety claim not present in the findings given to you.\n"
+    "- Do NOT change, soften, or contradict the verdict provided.\n"
+    "- If the verdict is 'Insufficient Data', do NOT imply or reassure that the site is safe. Make the lack of available checks the headline, and state that the few checks that ran do not count for much without reputation/hosting data.\n"
+    "- Do NOT give the user instructions or advice beyond what the findings support.\n"
+    "- Write for someone with no technical background - avoid jargon like 'ASN' or 'RDAP'.\n"
+    "- If the verdict is Safe, keep the tone reassuring but not absolute.\n"
+    "- If most signals were unavailable, mention that the check was limited."
+)
 
 
 def fallback_summary(scan_result: ScanResult) -> str:
@@ -37,11 +59,7 @@ def insufficient_summary(scan_result: ScanResult) -> str:
     return body
 
 
-async def summarize(scan_result: ScanResult) -> str:
-    api_key = os.getenv("GROQ_API_KEY", "")
-    if not api_key:
-        return fallback_summary(scan_result)
-
+def _build_prompt(scan_result: ScanResult) -> str:
     unavailable_count = sum(1 for s in scan_result.signals if not s.available)
     total_signals = len(scan_result.signals)
 
@@ -61,7 +79,7 @@ async def summarize(scan_result: ScanResult) -> str:
     score_text = (
         "No score (insufficient data)" if scan_result.score is None else f"{scan_result.score}/100"
     )
-    user_prompt = (
+    return (
         f"Score: {score_text}\n"
         f"Verdict: {scan_result.verdict}\n"
         f"Confidence: {scan_result.confidence}% ({scan_result.completed_signals} of {scan_result.total_signals} checks completed)\n\n"
@@ -70,37 +88,65 @@ async def summarize(scan_result: ScanResult) -> str:
         "Write the 2-4 sentence summary now."
     )
 
-    system_prompt = (
-        "You are summarizing a website risk scan for a non-technical reader.\n\n"
-        "You will be given:\n"
-        "- A final risk score (0-100, or 'insufficient data') and verdict (Safe / Caution / High Risk / Insufficient Data) that have ALREADY been calculated by a rule-based system.\n"
-        "- A list of specific findings, marking each check as passed, red flag, or unavailable.\n\n"
-        "Your job is ONLY to summarize the given findings in plain English, in 2-4 sentences.\n\n"
-        "Strict rules:\n"
-        "- Do NOT invent, assume, or add any risk or safety claim not present in the findings given to you.\n"
-        "- Do NOT change, soften, or contradict the verdict provided.\n"
-        "- If the verdict is 'Insufficient Data', do NOT imply or reassure that the site is safe. Make the lack of available checks the headline, and state that the few checks that ran do not count for much without reputation/hosting data.\n"
-        "- Do NOT give the user instructions or advice beyond what the findings support.\n"
-        "- Write for someone with no technical background - avoid jargon like 'ASN' or 'RDAP'.\n"
-        "- If the verdict is Safe, keep the tone reassuring but not absolute.\n"
-        "- If most signals were unavailable, mention that the check was limited."
-    )
 
+async def _ollama_summarize(prompt: str) -> str | None:
     try:
+        async with httpx.AsyncClient(timeout=OLLAMA_TIMEOUT) as client:
+            resp = await client.post(
+                f"{OLLAMA_BASE_URL}/api/generate",
+                json={
+                    "model": OLLAMA_MODEL,
+                    "prompt": f"{SYSTEM_PROMPT}\n\n{prompt}",
+                    "stream": False,
+                    "options": {"temperature": 0.3, "num_predict": 250},
+                },
+            )
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            return (data.get("response") or "").strip() or None
+    except Exception:
+        return None
+
+
+def _groq_summarize(prompt: str) -> str | None:
+    api_key = os.getenv("GROQ_API_KEY", "")
+    if not api_key:
+        return None
+    try:
+        from groq import Groq
+
         client = Groq(api_key=api_key)
         chat_completion = client.chat.completions.create(
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
             ],
             model="llama3-8b-8192",
             max_tokens=250,
             temperature=0.3,
         )
         summary = chat_completion.choices[0].message.content.strip()
-        if summary:
-            return summary
+        return summary or None
     except Exception:
-        pass
+        return None
+
+
+async def summarize(scan_result: ScanResult) -> str:
+    prompt = _build_prompt(scan_result)
+
+    summary = await _ollama_summarize(prompt)
+    if summary:
+        return summary
+
+    summary = await asyncio_groq_wrapper(_groq_summarize, prompt)
+    if summary:
+        return summary
 
     return fallback_summary(scan_result)
+
+
+async def asyncio_groq_wrapper(func, prompt: str) -> str | None:
+    import asyncio
+
+    return await asyncio.to_thread(func, prompt)

@@ -116,4 +116,19 @@ async def _get_hosting_info(ip: str) -> tuple[str, str, str] | None:
             org = data.get("isp", "") or data.get("org", "") or "Unknown"
             return asn_number, org, data.get("countryCode", "Unknown")
     except Exception:
+        pass
+
+    try:
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
+            resp = await client.get(f"https://ipwho.is/{ip}")
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            if not data.get("success"):
+                return None
+            connection = data.get("connection", {}) or {}
+            asn_number = str(connection.get("asn", "") or "")
+            org = connection.get("org", "") or connection.get("isp", "") or "Unknown"
+            return asn_number, org, data.get("country_code", "Unknown")
+    except Exception:
         return None

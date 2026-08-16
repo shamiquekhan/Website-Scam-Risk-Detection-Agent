@@ -1,8 +1,72 @@
 import os
 import base64
+import json
 import httpx
+import tldextract
 from app.models import SignalResult
 from app.scoring.engine import _load_weights
+
+_BRANDS_CACHE: set[str] | None = None
+
+
+def _load_top_brands() -> set[str]:
+    global _BRANDS_CACHE
+    if _BRANDS_CACHE is None:
+        path = os.path.join(os.path.dirname(__file__), "../../data/top_brands.json")
+        with open(path) as f:
+            _BRANDS_CACHE = set(json.load(f))
+    return _BRANDS_CACHE
+
+
+def _is_top_brand(domain_or_url: str) -> bool:
+    try:
+        extracted = tldextract.extract(domain_or_url)
+        registrable = f"{extracted.domain}.{extracted.suffix}" if extracted.suffix else ""
+    except Exception:
+        registrable = ""
+    return registrable in _load_top_brands()
+
+
+def assess_stats(malicious: int, suspicious: int, is_brand: bool) -> tuple[bool, int, str, dict]:
+    """Pure decision logic for VirusTotal stats. Returns (passed, deduction, detail, raw)."""
+    weights = _load_weights()
+    total_flagged = malicious + suspicious
+    stats = {"malicious": malicious, "suspicious": suspicious}
+
+    if total_flagged == 0:
+        return True, 0, "Clean on VirusTotal (no engines flagged the URL).", stats
+
+    if total_flagged >= 3:
+        return (
+            False,
+            weights.get("virustotal_3plus", 30),
+            f"Flagged by {total_flagged} engines ({malicious} malicious, {suspicious} suspicious) on VirusTotal.",
+            stats,
+        )
+
+    if is_brand:
+        return (
+            True,
+            0,
+            f"VirusTotal reported {total_flagged} engine flag(s), but on a well-known brand domain "
+            "this is low-confidence and was not counted.",
+            stats,
+        )
+
+    if malicious >= 1:
+        return (
+            False,
+            weights.get("virustotal_1_2", 10),
+            f"Flagged as malicious by {malicious} engine(s) on VirusTotal.",
+            stats,
+        )
+
+    return (
+        False,
+        weights.get("virustotal_suspicious_only", 5),
+        f"Flagged as suspicious by {suspicious} engine(s) on VirusTotal.",
+        stats,
+    )
 
 
 async def check(domain_or_url: str) -> SignalResult:
@@ -54,32 +118,13 @@ async def check(domain_or_url: str) -> SignalResult:
     stats = data.get("data", {}).get("attributes", {}).get("last_analysis_stats", {})
     malicious = stats.get("malicious", 0)
     suspicious = stats.get("suspicious", 0)
-    total_flagged = malicious + suspicious
 
-    weights = _load_weights()
-    if total_flagged >= 3:
-        return SignalResult(
-            signal_name="virustotal",
-            category="reputation",
-            passed=False,
-            deduction=weights.get("virustotal_3plus", 30),
-            detail=f"Flagged by {total_flagged} engines ({malicious} malicious, {suspicious} suspicious) on VirusTotal.",
-            raw_data={"stats": stats},
-        )
-    if total_flagged >= 1:
-        return SignalResult(
-            signal_name="virustotal",
-            category="reputation",
-            passed=False,
-            deduction=weights.get("virustotal_1_2", 10),
-            detail=f"Flagged by {total_flagged} engine(s) on VirusTotal.",
-            raw_data={"stats": stats},
-        )
-
+    passed, deduction, detail, raw = assess_stats(malicious, suspicious, _is_top_brand(domain_or_url))
     return SignalResult(
         signal_name="virustotal",
         category="reputation",
-        passed=True,
-        deduction=0,
-        detail=f"Clean on VirusTotal ({stats.get('harmless', 0)} engines checked, none flagged).",
+        passed=passed,
+        deduction=deduction,
+        detail=detail,
+        raw_data={"stats": raw},
     )

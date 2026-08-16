@@ -11,6 +11,16 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Downloaded feeds (refreshed at runtime — do not commit)
+backend/data/openphish_feed.txt
+backend/data/urlhaus_blocklist.txt
+
+# ML training data (large, downloaded)
+backend/data/training/
+
+# Retrainable intermediate artifacts (ONNX model is committed)
+backend/models/*.pkl
+
 # Frontend
 frontend/node_modules/
 frontend/.next/

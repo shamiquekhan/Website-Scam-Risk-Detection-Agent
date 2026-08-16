@@ -1,10 +1,11 @@
 import aiosqlite
 import json
+import os
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from app.models import ScanResult, SignalResult
 
-DB_PATH = "cache.db"
+DB_PATH = os.getenv("SCAN_DB_PATH", "cache.db")
 
 
 async def _get_connection() -> aiosqlite.Connection:

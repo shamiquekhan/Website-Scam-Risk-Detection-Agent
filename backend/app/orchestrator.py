@@ -15,6 +15,9 @@ from app.collectors import (
     urlhaus,
     content_heuristics,
     typosquat,
+    openphish,
+    local_ml,
+    domain_lexical,
 )
 
 COLLECTOR_TIMEOUT = 8
@@ -26,6 +29,9 @@ COLLECTORS = [
     ("safe_browsing", safe_browsing.check),
     ("virustotal", virustotal.check),
     ("urlhaus", urlhaus.check),
+    ("openphish", openphish.check),
+    ("local_ml", local_ml.check),
+    ("domain_lexical", domain_lexical.check),
     ("content_heuristics", content_heuristics.check),
     ("typosquat", typosquat.check),
 ]
@@ -80,3 +86,23 @@ async def run_scan(url: str) -> ScanResult:
         await save_scan(scan_result)
 
     return scan_result
+
+
+async def run_scan_limited(urls: list[str], max_concurrency: int = 4) -> tuple[list[ScanResult | None], list[dict[str, str]]]:
+    """Scan a list of URLs with a concurrency cap. Returns (results, errors)."""
+    semaphore = asyncio.Semaphore(max(1, min(max_concurrency or 4, 10)))
+
+    async def bounded(url: str) -> ScanResult | None:
+        async with semaphore:
+            try:
+                return await asyncio.wait_for(run_scan(url), timeout=45)
+            except Exception:
+                return None
+
+    results = await asyncio.gather(*(bounded(u) for u in urls))
+    errors = [
+        {"url": url, "error": "Scan failed or timed out."}
+        for url, result in zip(urls, results)
+        if result is None
+    ]
+    return list(results), errors

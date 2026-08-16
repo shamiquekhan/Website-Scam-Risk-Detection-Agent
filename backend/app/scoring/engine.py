@@ -4,6 +4,8 @@ from app.models import SignalResult
 
 _weights: dict[str, int] | None = None
 
+BLACKLIST_SIGNALS = ("safe_browsing", "urlhaus", "openphish")
+
 
 def _load_weights() -> dict[str, int]:
     global _weights
@@ -14,6 +16,18 @@ def _load_weights() -> dict[str, int]:
     return _weights
 
 
+def verdict_for(score: int) -> str:
+    if score >= 90:
+        return "Safe"
+    if score >= 70:
+        return "Likely Safe"
+    if score >= 50:
+        return "Caution"
+    if score >= 30:
+        return "Suspicious"
+    return "High Risk"
+
+
 def calculate_score(signals: list[SignalResult]) -> tuple[int, str]:
     weights = _load_weights()
     score = 100
@@ -22,7 +36,7 @@ def calculate_score(signals: list[SignalResult]) -> tuple[int, str]:
 
     for signal in available.values():
         score -= signal.deduction
-        if signal.signal_name in ("safe_browsing", "urlhaus") and not signal.passed:
+        if signal.signal_name in BLACKLIST_SIGNALS and not signal.passed:
             has_blacklist_hit = True
 
     whois = available.get("whois_check")
@@ -43,29 +57,21 @@ def calculate_score(signals: list[SignalResult]) -> tuple[int, str]:
         and whois.raw_data.get("days_old", 0) > 730
         and available.get("ssl_check")
         and available["ssl_check"].passed
-        and available.get("safe_browsing")
-        and available["safe_browsing"].passed
-        and available.get("urlhaus")
-        and available["urlhaus"].passed
+        and all(
+            available.get(sig) and available[sig].passed
+            for sig in ("safe_browsing", "urlhaus", "openphish")
+        )
     ):
         score += weights.get("positive_bonus_old_domain", 5)
 
     if has_blacklist_hit:
-        score = min(score, 40)
+        score = min(score, 29)
 
     score = max(0, min(100, score))
-
-    if score >= 80:
-        verdict = "Safe"
-    elif score >= 50:
-        verdict = "Caution"
-    else:
-        verdict = "High Risk"
-
-    return score, verdict
+    return score, verdict_for(score)
 
 
-MIN_COMPLETED_SIGNALS = 5
+MIN_COMPLETED_SIGNALS = 6
 
 
 def calculate_assessment(signals: list[SignalResult]) -> tuple[int | None, str, int, int, int]:
@@ -79,10 +85,4 @@ def calculate_assessment(signals: list[SignalResult]) -> tuple[int | None, str, 
 
     adjusted_score = round(raw_score * completed_signals / total_signals)
     adjusted_score = max(0, min(100, adjusted_score))
-    if adjusted_score >= 80:
-        verdict = "Safe"
-    elif adjusted_score >= 50:
-        verdict = "Caution"
-    else:
-        verdict = "High Risk"
-    return adjusted_score, verdict, completed_signals, total_signals, confidence
+    return adjusted_score, verdict_for(adjusted_score), completed_signals, total_signals, confidence

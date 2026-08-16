@@ -1,0 +1,36 @@
+services:
+  backend:
+    type: web
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    plan: free
+    envVars:
+      - key: OLLAMA_BASE_URL
+        value: http://localhost:11434
+      - key: OLLAMA_MODEL
+        value: phi3:mini
+      - key: SCAN_DB_PATH
+        value: /var/data/cache.db
+      - key: VIRUSTOTAL_API_KEY
+        sync: false
+      - key: GOOGLE_SAFE_BROWSING_API_KEY
+        sync: false
+      - key: URLHAUS_AUTH_KEY
+        sync: false
+      - key: IPINFO_TOKEN
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+
+  ollama:
+    type: pserv
+    env: docker
+    image:
+      url: ollama/ollama:latest
+    disk:
+      name: ollama
+      mountPath: /root/.ollama
+      sizeGB: 10
+    plan: free

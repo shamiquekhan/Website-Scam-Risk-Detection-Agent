@@ -1,29 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import ScoreCard from '@/components/ScoreCard'
 import SignalList from '@/components/SignalList'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-
-interface ScanResult {
-  scan_id: string
-  url: string
-  score: number | null
-  verdict: string
-  summary: string
-  signals: any[]
-  cached: boolean
-  scanned_at: string
-  completed_signals: number
-  total_signals: number
-  confidence: number
-}
+import { API_URL, ScanResult } from '@/lib/api'
 
 export default function ReportPage({ params }: { params: { id: string } }) {
   const [result, setResult] = useState<ScanResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     async function fetchReport() {
@@ -41,21 +28,33 @@ export default function ReportPage({ params }: { params: { id: string } }) {
     fetchReport()
   }, [params.id])
 
+  async function copyReportLink() {
+    const link = window.location.href
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      window.prompt('Copy this report link:', link)
+    }
+  }
+
   if (loading) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-8 text-center">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
-        <p className="text-gray-500">Loading report...</p>
+      <main className="max-w-2xl mx-auto px-4 py-10 text-center">
+        <div className="animate-spin h-8 w-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-3" />
+        <p className="text-slate-400">Loading report…</p>
       </main>
     )
   }
 
   if (error) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">
-          {error}
-        </div>
+      <main className="max-w-2xl mx-auto px-4 py-10">
+        <div className="bg-red-950/50 border border-red-800 text-red-300 rounded-xl p-4">{error}</div>
+        <Link href="/" className="text-cyan-400 hover:underline text-sm mt-4 inline-block">
+          ← Back to scanner
+        </Link>
       </main>
     )
   }
@@ -63,9 +62,14 @@ export default function ReportPage({ params }: { params: { id: string } }) {
   if (!result) return null
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Scan Report</h1>
-      <p className="text-sm text-gray-500 mb-6">URL: {result.url}</p>
+    <main className="max-w-2xl mx-auto px-4 py-10">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-white">Scan Report</h1>
+        <Link href="/" className="text-sm text-cyan-400 hover:underline">
+          ← New scan
+        </Link>
+      </div>
+      <p className="text-sm text-slate-400 mb-6 break-all">URL: {result.url}</p>
       <ScoreCard
         score={result.score}
         verdict={result.verdict}
@@ -75,6 +79,18 @@ export default function ReportPage({ params }: { params: { id: string } }) {
         confidence={result.confidence}
       />
       <SignalList signals={result.signals} />
+      <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p className="text-xs text-slate-500">
+          Report ID: {result.scan_id} · Scanned {new Date(result.scanned_at).toLocaleString()}
+        </p>
+        <button
+          type="button"
+          onClick={copyReportLink}
+          className="px-4 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors"
+        >
+          {copied ? 'Copied ✓' : 'Copy report link'}
+        </button>
+      </div>
     </main>
   )
 }

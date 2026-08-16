@@ -1,0 +1,6 @@
+# Optional: only needed to (re)train the local phishing classifier and
+# export it to ONNX. Runtime inference only needs requirements.txt.
+# Install: pip install -r requirements-train.txt
+scikit-learn==1.9.0
+onnx==1.22.0
+skl2onnx==1.20.0

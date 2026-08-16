@@ -6,11 +6,11 @@ load_dotenv()
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from app.models import ScanRequest, ScanResult
-from app.orchestrator import run_scan
+from app.models import ScanRequest, ScanResult, BatchScanRequest, BatchScanResult
+from app.orchestrator import run_scan, run_scan_limited
 from app.utils import normalize_url
 
-app = FastAPI(title="Website Scam Risk Detector", version="1.0.0")
+app = FastAPI(title="ScamShield AI — Website Scam Risk Detector", version="2.0.0")
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
@@ -40,6 +40,28 @@ async def scan(request: Request, scan_req: ScanRequest):
 
     result = await run_scan(scan_req.url)
     return result
+
+
+@app.post("/scan/batch", response_model=BatchScanResult)
+@limiter.limit("5/minute")
+async def batch_scan(request: Request, batch_req: BatchScanRequest):
+    if not batch_req.urls:
+        raise HTTPException(status_code=422, detail="urls must not be empty")
+    if len(batch_req.urls) > 100:
+        raise HTTPException(status_code=422, detail="Maximum 100 URLs per batch")
+    for url in batch_req.urls:
+        try:
+            normalize_url(url)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=f"Invalid URL '{url}': {e}")
+
+    results, errors = await run_scan_limited(batch_req.urls, batch_req.max_concurrency)
+    return BatchScanResult(
+        results=[r for r in results if r is not None],
+        scanned=len(results) - len(errors),
+        failed=len(errors),
+        errors=errors,
+    )
 
 
 @app.get("/scan/{scan_id}", response_model=ScanResult)
