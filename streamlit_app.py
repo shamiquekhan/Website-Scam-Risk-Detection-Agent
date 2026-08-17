@@ -9,6 +9,7 @@ BACKEND_DIR = os.path.join(os.path.dirname(__file__), "backend")
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
+from app.models import to_dict  # noqa: E402
 from app.orchestrator import run_scan  # noqa: E402
 
 VERDICT_STYLE = {
@@ -54,7 +55,7 @@ def run_async(coro):
 
 
 def scan_url(url: str) -> dict:
-    return run_async(run_scan(url)).model_dump(mode="json")
+    return to_dict(run_async(run_scan(url)))
 
 
 scan_cached = st.cache_data(ttl=86400, show_spinner=False)(scan_url)

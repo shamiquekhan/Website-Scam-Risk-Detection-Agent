@@ -76,9 +76,12 @@ async def get_scan(scan_id: str):
         if row is None:
             raise HTTPException(status_code=404, detail="Scan not found")
         import json
+        from datetime import datetime
         from app.models import SignalResult
         data = json.loads(row[0])
         signals = [SignalResult(**s) for s in data["signals"]]
+        if isinstance(data.get("scanned_at"), str):
+            data["scanned_at"] = datetime.fromisoformat(data["scanned_at"].replace("Z", "+00:00"))
         return ScanResult(**{**data, "signals": signals, "cached": True})
     finally:
         await conn.close()

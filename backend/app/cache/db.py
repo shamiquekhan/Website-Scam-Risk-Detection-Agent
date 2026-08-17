@@ -3,7 +3,7 @@ import json
 import os
 from datetime import datetime, timezone, timedelta
 from typing import Optional
-from app.models import ScanResult, SignalResult
+from app.models import ScanResult, SignalResult, to_dict
 
 DB_PATH = os.getenv("SCAN_DB_PATH", "cache.db")
 
@@ -40,6 +40,8 @@ async def get_cached(domain: str) -> Optional[ScanResult]:
         if not data.get("total_signals"):
             return None
         signals = [SignalResult(**s) for s in data["signals"]]
+        if isinstance(data.get("scanned_at"), str):
+            data["scanned_at"] = datetime.fromisoformat(data["scanned_at"].replace("Z", "+00:00"))
         return ScanResult(**{**data, "signals": signals, "cached": True})
     finally:
         await conn.close()
@@ -48,8 +50,8 @@ async def get_cached(domain: str) -> Optional[ScanResult]:
 async def save_scan(result: ScanResult) -> None:
     conn = await _get_connection()
     try:
-        data = result.model_dump(mode="json")
-        data["signals"] = [s.model_dump(mode="json") for s in result.signals]
+        data = to_dict(result)
+        data["signals"] = [to_dict(s) for s in result.signals]
         await conn.execute(
             "INSERT OR REPLACE INTO scans (scan_id, domain, result_json, created_at) VALUES (?, ?, ?, ?)",
             (result.scan_id, result.normalized_domain, json.dumps(data), result.scanned_at.isoformat()),
